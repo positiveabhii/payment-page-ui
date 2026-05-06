@@ -1,49 +1,59 @@
 'use client';
 
+import React, { useState } from 'react';
 import { usePaymentStore } from '../store/usePaymentStore';
-import { formatCurrency } from '../utils/format';
+import TransactionItem from './TransactionItem';
+import TransactionDetails from './TransactionDetails';
+import { Transaction } from '../types/payment';
 
 export default function TransactionHistory() {
   const { transactions } = usePaymentStore();
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+  const [hasHydrated, setHasHydrated] = React.useState(false);
+
+  React.useEffect(() => {
+    setHasHydrated(true);
+  }, []);
+
+  if (!hasHydrated) return (
+    <div className="p-6 border rounded-xl bg-white shadow-sm flex flex-col h-full relative animate-pulse">
+      <div className="h-6 w-32 bg-gray-100 rounded mb-4" />
+      <div className="space-y-4">
+        <div className="h-12 bg-gray-50 rounded" />
+        <div className="h-12 bg-gray-50 rounded" />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="p-6 border rounded-xl bg-white shadow-sm overflow-hidden flex flex-col h-full">
+    <div className="p-6 border rounded-xl bg-white shadow-sm overflow-hidden flex flex-col h-full relative">
       <h2 className="text-lg font-medium mb-4">Recent Transactions</h2>
-      <div className="space-y-4 overflow-y-auto pr-2">
+      
+      <div className="space-y-1 overflow-y-auto pr-2 min-h-[300px]">
         {transactions.length === 0 ? (
-          <div className="py-8 text-center text-gray-400 text-sm italic">
-            No transactions yet
+          <div className="py-12 flex flex-col items-center justify-center text-gray-400">
+            <svg className="w-12 h-12 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p className="text-sm italic">No transactions found</p>
           </div>
         ) : (
           transactions.map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between py-3 border-b last:border-0 border-gray-50 group">
-              <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold text-[10px] uppercase ${
-                  tx.status === 'completed' ? 'bg-green-500' : tx.status === 'timeout' ? 'bg-amber-500' : 'bg-red-500'
-                }`}>
-                  {tx.cardType !== 'unknown' ? tx.cardType.slice(0, 2) : '??'}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-medium text-gray-900 truncate">•••• {tx.last4}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-tighter">
-                    {new Date(tx.date).toLocaleDateString()}
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-gray-900">
-                  {formatCurrency(tx.amount, tx.currency)}
-                </div>
-                <div className={`text-[10px] font-bold uppercase ${
-                  tx.status === 'completed' ? 'text-green-600' : tx.status === 'timeout' ? 'text-amber-600' : 'text-red-600'
-                }`}>
-                  {tx.status}
-                </div>
-              </div>
-            </div>
+            <TransactionItem 
+              key={tx.id} 
+              transaction={tx} 
+              onClick={() => setSelectedTx(tx)} 
+            />
           ))
         )}
       </div>
+
+      {selectedTx && (
+        <TransactionDetails 
+          transaction={selectedTx} 
+          onClose={() => setSelectedTx(null)} 
+        />
+      )}
     </div>
   );
 }
