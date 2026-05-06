@@ -27,14 +27,14 @@ export const formatCardNumber = (value: string): string => {
 };
 
 export const currencies = [
-  { code: 'USD', name: 'United States', flag: '🇺🇸' },
-  { code: 'INR', name: 'India', flag: '🇮🇳' },
-  { code: 'EUR', name: 'Europe', flag: '🇪🇺' },
-  { code: 'GBP', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'JPY', name: 'Japan', flag: '🇯🇵' },
-  { code: 'CAD', name: 'Canada', flag: '🇨🇦' },
-  { code: 'AUD', name: 'Australia', flag: '🇦🇺' },
-  { code: 'SGD', name: 'Singapore', flag: '🇸🇬' },
-  { code: 'AED', name: 'United Arab Emirates', flag: '🇦🇪' },
-  { code: 'CHF', name: 'Switzerland', flag: '🇨🇭' },
-];
+  { code: 'USD', name: 'United States', flag: '🇺🇸', symbol: '$' },
+  { code: 'INR', name: 'India', flag: '🇮🇳', symbol: '₹' },
+  { code: 'EUR', name: 'Europe', flag: '🇪🇺', symbol: '€' },
+  { code: 'GBP', name: 'United Kingdom', flag: '🇬🇧', symbol: '£' },
+  { code: 'JPY', name: 'Japan', flag: '🇯🇵', symbol: '¥' },
+  { code: 'CAD', name: 'Canada', flag: '🇨🇦', symbol: '$' },
+  { code: 'AUD', name: 'Australia', flag: '🇦🇺', symbol: '$' },
+  { code: 'SGD', name: 'Singapore', flag: '🇸🇬', symbol: '$' },
+  { code: 'AED', name: 'United Arab Emirates', flag: '🇦🇪', symbol: 'د.إ' },
+  { code: 'CHF', name: 'Switzerland', flag: '🇨🇭', symbol: 'Fr.' },
+];  
