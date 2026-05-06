@@ -1,42 +1,68 @@
 'use client';
 
 import { usePaymentStore } from '../store/usePaymentStore';
+import { processPaymentRequest } from '../utils/paymentService';
 
 export default function PaymentStatus() {
-  const { status, setStatus } = usePaymentStore();
+  const { 
+    status, 
+    setStatus, 
+    retryCount, 
+    incrementRetry, 
+    currentTransactionId, 
+    formData, 
+    addTransaction, 
+    updateTransaction 
+  } = usePaymentStore();
 
   if (status === 'idle') return null;
 
+  const handleRetry = async () => {
+    if (retryCount >= 2) return; // 0, 1, 2 = 3 attempts
+    incrementRetry();
+    await processPaymentRequest(
+      formData, 
+      setStatus, 
+      (tx, isUpdate) => isUpdate ? updateTransaction(tx) : addTransaction(tx),
+      currentTransactionId
+    );
+  };
+
   const config = {
     processing: {
-      title: 'Processing Payment',
+      title: retryCount > 0 ? `Retrying (Attempt ${retryCount + 1}/3)` : 'Processing Payment',
       description: 'Please do not refresh the page or close the window.',
       icon: 'bg-blue-500 animate-pulse',
-      btnText: null
+      btnText: null,
+      action: null
     },
     success: {
       title: 'Payment Successful',
       description: 'Your transaction has been completed successfully.',
       icon: 'bg-green-500',
-      btnText: 'Done'
+      btnText: 'Done',
+      action: () => setStatus('idle')
     },
     failed: {
       title: 'Payment Failed',
-      description: 'Your transaction was declined. Please try again.',
+      description: retryCount < 2 ? 'Your transaction was declined. You can try again.' : 'Transaction declined after 3 attempts.',
       icon: 'bg-red-500',
-      btnText: 'Try Again'
+      btnText: retryCount < 2 ? 'Retry Payment' : 'Close',
+      action: retryCount < 2 ? handleRetry : () => setStatus('idle')
     },
     timeout: {
       title: 'Request Timed Out',
-      description: 'The payment gateway is taking too long to respond.',
+      description: retryCount < 2 ? 'The gateway is slow. Would you like to retry?' : 'Request timed out after 3 attempts.',
       icon: 'bg-amber-500',
-      btnText: 'Retry'
+      btnText: retryCount < 2 ? 'Retry Payment' : 'Close',
+      action: retryCount < 2 ? handleRetry : () => setStatus('idle')
     },
     error: {
       title: 'Network Error',
       description: 'Please check your connection and try again.',
       icon: 'bg-gray-500',
-      btnText: 'Close'
+      btnText: 'Close',
+      action: () => setStatus('idle')
     }
   };
 
@@ -54,11 +80,14 @@ export default function PaymentStatus() {
         <div>
           <h3 className="text-xl font-bold text-gray-900">{current.title}</h3>
           <p className="text-gray-500 mt-2">{current.description}</p>
+          {status === 'processing' && retryCount > 0 && (
+             <p className="text-xs text-blue-600 font-medium mt-2">Attempt {retryCount + 1} of 3</p>
+          )}
         </div>
 
         {current.btnText && (
           <button
-            onClick={() => setStatus('idle')}
+            onClick={current.action!}
             className="w-full py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-800 transition-colors"
           >
             {current.btnText}

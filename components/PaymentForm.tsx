@@ -16,7 +16,16 @@ import {
 } from '../utils/validation';
 
 export default function PaymentForm() {
-  const { status, setStatus, formData, updateFormData, addTransaction } = usePaymentStore();
+  const { 
+    status, 
+    setStatus, 
+    formData, 
+    updateFormData, 
+    addTransaction, 
+    updateTransaction,
+    resetRetry, 
+    setTransactionId 
+  } = usePaymentStore();
 
   const [errors, setErrors] = useState<Partial<Record<keyof PaymentFormData, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof PaymentFormData, boolean>>>({});
@@ -61,7 +70,13 @@ export default function PaymentForm() {
     e.preventDefault();
     if (!isFormValid || status === 'processing') return;
 
-    await processPaymentRequest(formData, setStatus, addTransaction);
+    resetRetry();
+    const txId = await processPaymentRequest(
+      formData, 
+      setStatus, 
+      (tx, isUpdate) => isUpdate ? updateTransaction(tx) : addTransaction(tx)
+    );
+    setTransactionId(txId);
   };
 
   return (

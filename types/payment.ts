@@ -24,7 +24,13 @@ export interface PaymentState {
   status: PaymentStatus;
   transactions: Transaction[];
   formData: PaymentFormData;
+  retryCount: number;
+  currentTransactionId: string | null;
   setStatus: (status: PaymentStatus) => void;
   addTransaction: (transaction: Transaction) => void;
+  updateTransaction: (transaction: Transaction) => void;
   updateFormData: (data: Partial<PaymentFormData>) => void;
+  incrementRetry: () => void;
+  resetRetry: () => void;
+  setTransactionId: (id: string | null) => void;
 }

@@ -4,10 +4,13 @@ import { detectCardType } from './validation';
 export const processPaymentRequest = async (
   formData: PaymentFormData,
   onStatusChange: (status: PaymentStatus) => void,
-  addTransaction: (transaction: Transaction) => void
+  addOrUpdateTransaction: (transaction: Transaction, isUpdate: boolean) => void,
+  existingTransactionId?: string | null
 ) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const transactionId = existingTransactionId || crypto.randomUUID();
+  const isUpdate = !!existingTransactionId;
 
   onStatusChange('processing');
 
@@ -20,39 +23,49 @@ export const processPaymentRequest = async (
     });
 
     clearTimeout(timeoutId);
-
     const data = await response.json();
 
     if (response.ok) {
       onStatusChange('success');
-      addTransaction({
-        id: data.transactionId || crypto.randomUUID(),
+      addOrUpdateTransaction({
+        id: transactionId,
         amount: parseFloat(formData.amount),
         currency: formData.currency,
         date: new Date().toISOString(),
         status: 'completed',
         last4: formData.cardNumber.slice(-4),
         cardType: detectCardType(formData.cardNumber)
-      });
+      }, isUpdate);
     } else {
       const status = response.status === 408 ? 'timeout' : 'failed';
       onStatusChange(status);
-      addTransaction({
-        id: crypto.randomUUID(),
+      addOrUpdateTransaction({
+        id: transactionId,
         amount: parseFloat(formData.amount),
         currency: formData.currency,
         date: new Date().toISOString(),
         status: status === 'timeout' ? 'timeout' : 'failed',
         last4: formData.cardNumber.slice(-4),
         cardType: detectCardType(formData.cardNumber)
-      });
+      }, isUpdate);
     }
   } catch (error: any) {
     clearTimeout(timeoutId);
-    if (error.name === 'AbortError') {
-      onStatusChange('timeout');
-    } else {
-      onStatusChange('error');
+    const status = error.name === 'AbortError' ? 'timeout' : 'error';
+    onStatusChange(status);
+    
+    if (status !== 'error') {
+      addOrUpdateTransaction({
+        id: transactionId,
+        amount: parseFloat(formData.amount),
+        currency: formData.currency,
+        date: new Date().toISOString(),
+        status: status === 'timeout' ? 'timeout' : 'failed',
+        last4: formData.cardNumber.slice(-4),
+        cardType: detectCardType(formData.cardNumber)
+      }, isUpdate);
     }
   }
+
+  return transactionId;
 };
