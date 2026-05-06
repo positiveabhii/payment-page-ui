@@ -1,4 +1,4 @@
-export type PaymentStatus = 'idle' | 'processing' | 'success' | 'error';
+export type PaymentStatus = 'idle' | 'processing' | 'success' | 'failed' | 'timeout' | 'error';
 export type CardType = 'visa' | 'mastercard' | 'amex' | 'unknown';
 
 export interface Transaction {
@@ -6,8 +6,9 @@ export interface Transaction {
   amount: number;
   currency: string;
   date: string;
-  status: 'completed' | 'failed';
+  status: 'completed' | 'failed' | 'timeout';
   last4: string;
+  cardType: CardType;
 }
 
 export interface PaymentFormData {

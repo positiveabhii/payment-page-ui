@@ -5,6 +5,7 @@ import CardInput from './CardInput';
 import AmountInput from './AmountInput';
 import { usePaymentStore } from '../store/usePaymentStore';
 import { CardType, PaymentFormData } from '../types/payment';
+import { processPaymentRequest } from '../utils/paymentService';
 import { 
   validateCardholderName, 
   validateCardNumber, 
@@ -15,7 +16,7 @@ import {
 } from '../utils/validation';
 
 export default function PaymentForm() {
-  const { status, setStatus, formData, updateFormData } = usePaymentStore();
+  const { status, setStatus, formData, updateFormData, addTransaction } = usePaymentStore();
 
   const [errors, setErrors] = useState<Partial<Record<keyof PaymentFormData, string>>>({});
   const [touched, setTouched] = useState<Partial<Record<keyof PaymentFormData, boolean>>>({});
@@ -58,20 +59,9 @@ export default function PaymentForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) return;
+    if (!isFormValid || status === 'processing') return;
 
-    setStatus('processing');
-    try {
-      const res = await fetch('/api/pay', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
-      if (res.ok) setStatus('success');
-      else setStatus('error');
-    } catch {
-      setStatus('error');
-    }
+    await processPaymentRequest(formData, setStatus, addTransaction);
   };
 
   return (
